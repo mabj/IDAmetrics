@@ -89,6 +89,8 @@ CF_USE = ida_idp.CF_USE1 | ida_idp.CF_USE2 | ida_idp.CF_USE3 | ida_idp.CF_USE4 |
 
 FUNCATTR_END = 4  # function end address
 ARGUMENT_SIZE = 4
+CSV = True
+
 if __EA64__:
     FUNCATTR_END = 8
     ARGUMENT_SIZE = 8
@@ -1095,8 +1097,83 @@ class Metrics:
             total_metric_count += self.functions[function].global_vars_metric
         return total_metric_count
 
-    def save_results(self, name):
 
+    def save_results_csv(self, name):
+        if name == None:
+            return 0
+
+        f = open(name, 'w')
+        header_functions = [
+            'function name',
+            'lines of code',
+            'basic blocks (#)',
+            'condition count (#)',
+            'calls count (#)',
+            'assignments count (#)',
+            'cyclomatic complexity',
+            'cyclomatic complexity modified',
+            'jilb\'s metric',
+            'abc',
+            'r count',
+            'halstead.b',
+            'halstead.e',
+            'halstead.d',
+            'halstead.n*',
+            'halstead.v',
+            'halstead.N1',
+            'halstead.N2',
+            'halstead.n1',
+            'halstead.n2',
+            'pivovarsky',
+            'harrison',
+            'cocol metric',
+            'boundary value',
+            'span metric',
+            'global vars metric',
+            'oviedo metric',
+            'chepin metric',
+            'cardnglass metric',
+            'henryncafura metric'
+        ]
+        # saving header
+        f.write(','.join(header_functions))
+
+        # saving functions data
+        for function in self.functions:
+            cf = self.functions[function]
+            f.write(str(function) + ",")
+            f.write(("%.2f" % cf.loc_count) + ",")
+            f.write(("%.2f" % cf.bbl_count) + ",")
+            f.write(("%.2f" % cf.condition_count) + ",")
+            f.write(("%.2f" % cf.calls_count) + ",")
+            f.write(("%.2f" % cf.assign_count) + ",")
+            f.write(("%.2f" % cf.CC) + ",")
+            f.write(("%.2f" % cf.CC_modified) + ",")
+            f.write(("%.2f" % cf.CL) + ",")
+            f.write(("%.2f" % cf.ABC) + ",")
+            f.write(("%.2f" % cf.R) + ",")
+            f.write(("%.2f" % cf.Halstead_basic.B) + ",")
+            f.write(("%.2f" % cf.Halstead_basic.E) + ",")
+            f.write(("%.2f" % cf.Halstead_basic.D) + ",")
+            f.write(("%.2f" % cf.Halstead_basic.Ni) + ",")
+            f.write(("%.2f" % cf.Halstead_basic.V) + ",")
+            f.write(("%.2f" % cf.Halstead_basic.N1) + ",")
+            f.write(("%.2f" % cf.Halstead_basic.N2) + ",")
+            f.write(("%.2f" % cf.Halstead_basic.n1) + ",")
+            f.write(("%.2f" % cf.Halstead_basic.n2) + ",")
+            f.write(("%.2f" % cf.Pivovarsky) + ",")
+            f.write(("%.2f" % cf.Harrison) + ",")
+            f.write(("%.2f" % cf.Cocol) + ",")
+            f.write(("%.2f" % cf.boundary_values) + ",")
+            f.write(("%.2f" % cf.span_metric) + ",")
+            f.write(("%.2f" % cf.global_vars_metric) + ",")
+            f.write(("%.2f" % cf.Oviedo) + ",")
+            f.write(("%.2f" % cf.Chepin) + ",")
+            f.write(("%.2f" % cf.CardnGlass) + ",")
+            f.write(("%.2f" % cf.HenrynCafura) + "\n")
+        f.close()
+
+    def save_results(self, name):
         print('Average lines of code in a function:', self.average_loc_count)
         print('Total number of functions:', self.total_func_count)
         print('Total lines of code:', self.total_loc_count)
@@ -1215,9 +1292,16 @@ def init_analysis(metrics_used):
     current_time = strftime("%Y-%m-%d_%H-%M-%S")
     analyzed_file = ida_nalt.get_root_filename()
     analyzed_file = analyzed_file.replace(".", "_")
-    mask = analyzed_file + "_" + current_time + ".txt"
+    extension = ".txt"
+    if CSV:
+        extension = ".csv"
+
+    mask = analyzed_file + "_" + current_time + extension
     name = ida_kernwin.ask_file(1, mask, "Where to save metrics ?")
-    metrics_total.save_results(name)
+    if CSV:
+        metrics_total.save_results_csv(name)
+    else:
+        metrics_total.save_results(name)
     return 0
 
 
@@ -1291,6 +1375,9 @@ if __name__ == "__main__":
         current_time = strftime("%Y-%m-%d_%H-%M-%S")
         analyzed_file = ida_nalt.get_root_filename()
         analyzed_file = analyzed_file.replace(".", "_")
-        metrics_total.save_results(os.getcwd() + "/" + analyzed_file + "_" +
-                                   current_time + ".txt")
+        file_name = os.getcwd() + "/" + analyzed_file + "_" + current_time
+        if CSV:
+            metrics_total.save_results_csv(file_name + ".csv")
+        else:
+            metrics_total.save_results(file_name + ".txt")
         idc.qexit(0)
