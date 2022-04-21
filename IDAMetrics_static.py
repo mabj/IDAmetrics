@@ -1137,7 +1137,7 @@ class Metrics:
         ]
         # saving header
         f.write(','.join(header_functions))
-
+        f.write('\n')
         # saving functions data
         for function in self.functions:
             cf = self.functions[function]
